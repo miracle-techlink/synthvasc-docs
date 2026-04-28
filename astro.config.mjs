@@ -3,8 +3,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
-  site: 'https://miracle-techlink.github.io/synthvasc-docs',
-  base: '/synthvasc-docs',
+  site: 'https://synthvasc-docs.vercel.app',
   integrations: [
     starlight({
       title: 'SynthVasc',
