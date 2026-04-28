@@ -4,6 +4,9 @@ import starlight from '@astrojs/starlight';
 
 export default defineConfig({
   site: 'https://synthvasc-docs.vercel.app',
+  redirects: {
+    '/': '/zh-cn/',
+  },
   integrations: [
     starlight({
       title: 'SynthVasc',
