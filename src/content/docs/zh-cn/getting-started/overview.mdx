@@ -1,0 +1,74 @@
+---
+title: 项目总览
+description: vascular-intervention-platform 整体介绍、核心贡献与技术定位。
+sidebar:
+  order: 1
+---
+
+import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
+
+**vascular-intervention-platform** 实现了从 CT 扫描到自主导丝导航的完整闭环流水线。
+
+**GitHub**: https://github.com/miracle-techlink/vascular-intervention-platform
+
+## 核心贡献
+
+<CardGrid>
+  <Card title="CT → 合成 DSA 自动生成" icon="document">
+    全自动将任意对比增强 CT 转化为带完整 3D 标注的双平面合成荧光序列（约 200 帧/例），无需真实患者 DSA 数据。
+  </Card>
+  <Card title="stEVE 仿真环境" icon="rocket">
+    基于 SOFA BeamAdapter 有限元引擎的物理精确导丝-血管交互仿真，支持 SAC / PPO / TD3 等 RL 算法训练。
+  </Card>
+  <Card title="虚实域迁移 (CUT)" icon="puzzle">
+    带导丝保留损失 L_wire 的 CUT 无配对图像翻译，将合成 DSA 风格迁移至真实 guide3d 荧光图像分布。
+  </Card>
+  <Card title="Diffusion Policy 部署" icon="laptop">
+    ResNet-18 + DDIM-10 离线训练，&lt;15ms/步 实时推理，零样本迁移至物理机器人平台。
+  </Card>
+</CardGrid>
+
+## 整体管线
+
+```
+CT (.nrrd / .nii.gz)
+  │
+  ├─ pipeline/preprocess.py     重采样至 1.5mm 等向分辨率
+  ├─ pipeline/segment.py        TotalSegmentator 血管分割（6 类）
+  ├─ pipeline/mesh.py           Marching Cubes → OBJ 网格
+  ├─ pipeline/nav.py            提取插入点（股动脉）+ LCCA 目标
+  ├─ pipeline/path.py           体素化 Dijkstra 路径规划
+  │
+  ├─ simulation/                ★ stEVE 仿真后端
+  │   ├─ eve/                   核心仿真库（SOFA BeamAdapter 封装）
+  │   └─ examples/              训练 & 演示脚本
+  │       ├─ train_demo.py                  快速验证（10k 步）
+  │       ├─ train_ablation_generalization.py  泛化消融（single/multi5/multi10）
+  │       └─ demo_exp7.py                   可视化演示
+  │
+  ├─ pipeline/synth_dsa_v2.py   Beer-Lambert 双平面 DSA 渲染
+  ├─ pipeline/infer.py          策略推理接口
+  │
+  ├─ api/main.py                FastAPI 后端
+  └─ frontend/                  React + Three.js 3D 可视化界面
+```
+
+## 已验证性能
+
+| 指标 | 数值 |
+|------|------|
+| 导航成功率（SAC, multi-10） | ~60% |
+| 推理延迟（Diffusion Policy, DDIM-10） | &lt;15 ms/步 |
+| 合成 DSA 帧数（11 例 KiTS AVT） | ~2,200 帧 |
+| SOFA 仿真速度 | ~1× 实时 |
+| 单次 CT 处理耗时（CPU） | 10–15 分钟 |
+
+## 与 SynthVasc v1 的关系
+
+当前仓库包含基于 stEVE 的**现有仿真平台**。`synthvasc/` 子目录是正在开发中的
+**下一代 5 层架构**（更清晰的 API 设计、多后端支持、更严格的测试体系），
+两者共用同一组 AVT 数据集和 CAS 术式配置。
+
+<Aside type="tip">
+  从[快速开始](/zh-cn/getting-started/quickstart/)开始，先跑通现有 stEVE 仿真环境。
+</Aside>

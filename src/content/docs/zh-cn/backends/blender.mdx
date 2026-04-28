@@ -1,0 +1,24 @@
+---
+title: Blender Backend
+description: 基于 Blender 的渲染与软体仿真后端（规划中）。
+sidebar:
+  badge:
+    text: TODO
+    variant: note
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="note" title="规划中">
+  Blender 后端预计在 Week 5+ 开始开发，主要用于高质量渲染和数据生成。
+</Aside>
+
+## 规划用途
+
+- 高保真渲染帧生成（用于 VLA 视觉观测）
+- 软体仿真备选方案（BlenderFEM 插件）
+- 合成训练数据生成管线
+
+## 接口规范
+
+与 SOFA 后端相同，实现 `BackendABC`，通过 contract tests 即可接入。

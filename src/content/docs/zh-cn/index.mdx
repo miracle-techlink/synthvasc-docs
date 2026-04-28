@@ -1,0 +1,87 @@
+---
+title: SynthVasc 文档
+description: 端到端血管介入导丝导航平台，从公开 CT 数据到物理机器人部署的完整闭环。
+template: splash
+hero:
+  title: 血管介入导丝导航平台
+  tagline: 从公开 CT 数据到物理机器人部署的端到端闭环。CT → 合成 DSA → stEVE 仿真 → RL/Diffusion Policy → 实机部署。
+  actions:
+    - text: 快速开始
+      link: /zh-cn/getting-started/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: 整体架构
+      link: /zh-cn/getting-started/architecture/
+      icon: open-book
+    - text: GitHub
+      link: https://github.com/miracle-techlink/vascular-intervention-platform
+      icon: github
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
+
+<div style="display:flex;gap:32px;flex-wrap:wrap;margin:2rem 0 2.5rem;padding:1.5rem 2rem;background:var(--sl-color-bg-nav);border:1px solid var(--sl-color-hairline);border-radius:12px;">
+  <div><div style="font-size:1.6rem;font-weight:800">~60%</div><div style="font-size:0.8rem;color:var(--sl-color-gray-3);margin-top:2px">导航成功率 (SAC)</div></div>
+  <div><div style="font-size:1.6rem;font-weight:800">&lt;15ms</div><div style="font-size:0.8rem;color:var(--sl-color-gray-3);margin-top:2px">推理延迟 (Diffusion Policy)</div></div>
+  <div><div style="font-size:1.6rem;font-weight:800">2,200+</div><div style="font-size:0.8rem;color:var(--sl-color-gray-3);margin-top:2px">合成 DSA 帧</div></div>
+  <div><div style="font-size:1.6rem;font-weight:800">27</div><div style="font-size:0.8rem;color:var(--sl-color-gray-3);margin-top:2px">AVT 病例</div></div>
+  <div><div style="font-size:1.6rem;font-weight:800">7.5 Hz</div><div style="font-size:0.8rem;color:var(--sl-color-gray-3);margin-top:2px">荧光帧率</div></div>
+</div>
+
+## 核心模块
+
+<CardGrid stagger>
+  <Card title="CT → 合成 DSA" icon="document">
+    Beer-Lambert 双平面 DSA 渲染，自动将任意增强 CT 转化为带 3D 标注的合成荧光序列，无需真实患者数据。
+  </Card>
+  <Card title="stEVE 仿真环境" icon="rocket">
+    基于 SOFA BeamAdapter FEM 的物理精确导丝-血管交互仿真，Gymnasium 接口，支持 SAC / PPO / TD3。
+  </Card>
+  <Card title="虚实域迁移" icon="puzzle">
+    带导丝保留损失 L_wire 的 CUT 无配对翻译，将合成 DSA 风格迁移至真实 guide3d 荧光图像分布。
+  </Card>
+  <Card title="Diffusion Policy 部署" icon="laptop">
+    ResNet-18 + DDIM-10 离线训练，推理延迟 &lt;15ms/步，支持零样本迁移至物理机器人平台。
+  </Card>
+</CardGrid>
+
+## 快速导航
+
+<CardGrid>
+  <LinkCard
+    title="快速开始"
+    description="环境安装与第一个仿真 episode"
+    href="/zh-cn/getting-started/quickstart/"
+  />
+  <LinkCard
+    title="整体架构"
+    description="CT → DSA → stEVE → RL → 实机的完整管线"
+    href="/zh-cn/getting-started/architecture/"
+  />
+  <LinkCard
+    title="stEVE 仿真"
+    description="SOFA BeamAdapter 配置、血管场景构建"
+    href="/zh-cn/backends/sofa/"
+  />
+  <LinkCard
+    title="关于项目"
+    description="论文、引用、致谢与开源协议"
+    href="/zh-cn/about/"
+  />
+</CardGrid>
+
+## 已验证性能
+
+| 指标 | 数值 | 说明 |
+|------|------|------|
+| 导航成功率 | ~60% | SAC, multi-10 血管训练 |
+| 推理延迟 | &lt;15 ms/步 | Diffusion Policy, DDIM-10 |
+| 合成 DSA 帧数 | ~2,200 帧 | 11 例 KiTS AVT CT |
+| SOFA 仿真速度 | ~1× 实时 | BeamAdapter FEM |
+| 单次 CT 处理 | 10–15 分钟 | CPU，TotalSegmentator |
+
+<Aside type="tip" title="开源仓库">
+  代码与数据开放在 [GitHub](https://github.com/miracle-techlink/vascular-intervention-platform)，
+  包含运动追踪训练代码与部分血管运动数据。
+</Aside>

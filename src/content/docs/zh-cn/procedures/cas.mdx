@@ -1,0 +1,77 @@
+---
+title: CAS 颈动脉支架
+description: 颈动脉支架置入术式配置详解，首个 SynthVasc 支持的术式。
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+颈动脉支架置入术 (Carotid Artery Stenting, CAS) 是 SynthVasc 首个支持的术式，
+基于股动脉入路，目标血管为左/右颈总动脉 (LCCA/RCCA)。
+
+## 术式概述
+
+| 参数 | 值 |
+|------|-----|
+| 入路 | 股动脉（右侧） |
+| 目标 | LCCA / RCCA |
+| 主要器械 | 导丝 + 导管 + 颈动脉支架 |
+| AVT 病例 | 27 个（全部可用） |
+| 数据来源 | AVT Dataset (Aortic Vessel Tree) |
+
+## cas_v1.yaml 配置
+
+```yaml
+# configs/procedures/cas_v1.yaml
+procedure: cas
+version: 1
+
+entry_point:
+  vessel: right_femoral_artery
+  position: [0.0, 0.0, 0.0]   # 相对坐标，单位 mm
+
+targets:
+  - name: LCCA
+    vessel_id: left_cca
+    waypoints_file: data/avt/navigation/lcca_waypoints.npy
+  - name: RCCA
+    vessel_id: right_cca
+    waypoints_file: data/avt/navigation/rcca_waypoints.npy
+
+instruments:
+  guidewire:
+    model: beam_fem
+    diameter_mm: 0.35
+    length_mm: 2600
+    tip_shape: j_curve
+  catheter:
+    model: rigid_flex
+    diameter_mm: 5.0   # 5F
+    length_mm: 1000
+
+reward:
+  tip_to_target_weight: 1.0
+  contact_force_penalty: 0.1   # N
+  path_deviation_penalty: 0.05
+
+termination:
+  success_radius_mm: 5.0
+  max_contact_force_n: 2.0
+  max_steps: 2000
+```
+
+## AVT 数据集
+
+<Aside type="tip" title="27 个有效病例已处理完成">
+  所有病例已完成：CT 分割 → 血管网格 → 导航点提取。可直接用于 Week 3 场景导入。
+</Aside>
+
+```bash
+# 数据路径
+data/avt/
+├── meshes/          # STL 血管网格（逐病例）
+├── navigation/      # 导航路径点 NPY 文件
+├── metadata.csv     # 病例基本信息
+└── split/
+    ├── train.txt    # 训练集 (22 cases)
+    └── val.txt      # 验证集 (5 cases)
+```

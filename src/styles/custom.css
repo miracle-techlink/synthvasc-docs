@@ -1,0 +1,42 @@
+/* SynthVasc — 仅布局/排版微调，配色完全使用 Starlight 默认主题 */
+
+/* ── TOPBAR ── */
+.site-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+/* ── H2 左侧强调竖线 ── */
+.sl-markdown-content h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--sl-color-hairline);
+  margin-top: 2.5rem;
+}
+
+.sl-markdown-content h2::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background: var(--sl-color-accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── CARDS hover 上浮 ── */
+.sl-link-card {
+  transition: transform 0.2s;
+}
+.sl-link-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--sl-color-gray-5); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--sl-color-gray-4); }

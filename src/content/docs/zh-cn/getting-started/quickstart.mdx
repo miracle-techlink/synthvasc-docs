@@ -1,0 +1,133 @@
+---
+title: 快速开始
+description: 5 分钟内跑通第一个 CAS 仿真 episode，无需 SOFA 环境。
+sidebar:
+  order: 2
+---
+
+import { Steps, Tabs, TabItem, Aside, Badge } from '@astrojs/starlight/components';
+
+本指南使用 **Mock 后端**，无需安装 SOFA，可在任意机器上运行。
+
+<Aside type="tip">
+  Mock 后端完全兼容真实后端的接口，适合开发、测试和 CI 环境。
+  切换到 SOFA 只需替换一行代码。
+</Aside>
+
+## 前提条件
+
+- Python ≥ 3.11
+- pnpm（文档站用）
+- conda（推荐，用于隔离 SOFA 环境）
+
+## 安装
+
+<Steps>
+
+1. **克隆仓库**
+
+   ```bash
+   git clone https://github.com/miracle-techlink/vascular-intervention-platform
+   cd vascular-intervention-platform/synthvasc
+   ```
+
+2. **安装 Python 包**
+
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+3. **验证安装**
+
+   ```bash
+   pytest tests/ -v --tb=short
+   ```
+
+   期望输出：`39 passed in X.Xs`
+
+</Steps>
+
+## 第一个 Episode
+
+<Tabs>
+  <TabItem label="Python API">
+    ```python
+    import gymnasium as gym
+    from synthvasc.foundation import MockBackend
+
+    # 创建 CAS 颈动脉支架环境
+    env = gym.make(
+        "synthvasc/CAS-v0",
+        backend=MockBackend(),
+        config="configs/procedures/cas_v1.yaml",
+    )
+
+    obs, info = env.reset(seed=42)
+    print(f"Obs keys: {list(obs.keys())}")
+
+    for step in range(200):
+        action = env.action_space.sample()
+        obs, reward, done, truncated, info = env.step(action)
+        if done or truncated:
+            obs, info = env.reset()
+            print(f"Episode ended at step {step}")
+            break
+
+    env.close()
+    print("Done!")
+    ```
+  </TabItem>
+  <TabItem label="脚本运行">
+    ```bash
+    python scripts/demo_mock.py
+    ```
+  </TabItem>
+  <TabItem label="Makefile">
+    ```bash
+    make demo        # 运行 Mock 演示
+    make test        # 运行完整测试
+    make lint        # ruff + mypy
+    ```
+  </TabItem>
+</Tabs>
+
+## 动作与观测空间
+
+```python
+env = gym.make("synthvasc/CAS-v0", backend=MockBackend())
+env.reset()
+
+print(env.action_space)
+# Box([-1. -1. -1. -1.], [1. 1. 1. 1.], (4,), float32)
+# [dx, dy, dz, drotate]  — 导丝末端增量控制
+
+print(env.observation_space)
+# Dict(
+#   guidewire_tip: Box(-inf, inf, (3,), float32),   # 末端 xyz
+#   vessel_dist:   Box(0, inf, (1,), float32),       # 距中心线距离
+#   target_vec:    Box(-inf, inf, (3,), float32),    # 指向目标向量
+# )
+```
+
+## 切换到 SOFA 后端
+
+<Aside type="caution" title="需要 SOFA 环境">
+  SOFA 后端需在 gpu-server (172.30.1.53) 上编译，参见 [SOFA 后端文档](/zh-cn/backends/sofa/)。
+</Aside>
+
+```python
+# 只需替换 backend 参数
+from synthvasc.backends.sofa import SofaBackend
+
+env = gym.make(
+    "synthvasc/CAS-v0",
+    backend=SofaBackend(sofa_root="/path/to/SOFA"),
+    config="configs/procedures/cas_v1.yaml",
+)
+```
+
+## 下一步
+
+- [5 层架构详解](/zh-cn/getting-started/architecture/) — 了解设计原理
+- [SOFA 后端安装](/zh-cn/backends/sofa/) — 配置真实物理引擎
+- [CAS 术式配置](/zh-cn/procedures/cas/) — 自定义血管场景

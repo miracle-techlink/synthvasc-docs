@@ -1,0 +1,33 @@
+---
+title: Mock Backend
+description: 无依赖的测试后端，用于 CI、单元测试和快速原型开发。
+sidebar:
+  badge:
+    text: Done
+    variant: success
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Mock 后端是一个轻量的假物理引擎，返回合理的随机状态，
+**不依赖 SOFA 或 Blender**，适合 CI 环境和开发调试。
+
+<Aside type="tip">
+  所有 39 个测试用例均使用 Mock 后端，GitHub Actions CI 全程无需 GPU。
+</Aside>
+
+## 使用方式
+
+```python
+from synthvasc.foundation import MockBackend
+
+backend = MockBackend(seed=42)
+# 完全兼容 BackendABC 接口，可直接替换 SofaBackend
+```
+
+## 特性
+
+- `step()` 返回带噪声的随机 PhysicsState，符合物理量纲
+- `set_state()` / `get_state()` 快照完整支持
+- 速度 > 10,000 steps/s（CPU），适合大规模测试
+- 支持 `deterministic=True` 模式（seed 固定，结果可复现）

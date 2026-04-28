@@ -1,0 +1,128 @@
+---
+title: 架构概览
+description: SynthVasc 5 层架构设计，从物理后端到 VLA 模型接口。
+sidebar:
+  order: 4
+---
+
+import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
+
+SynthVasc 采用严格分层架构，每层通过抽象接口隔离，可独立测试与替换。
+
+## 5 层架构
+
+```
+┌──────────────────────────────────────────────────────┐
+│  L6  Models       ModelBridge ABC                    │  VLA/RL 适配层
+├──────────────────────────────────────────────────────┤
+│  L4  Env          SynthVascEnv (Gymnasium)            │  强化学习接口
+│                   Action / Obs / Reward / Term Mgr   │
+├──────────────────────────────────────────────────────┤
+│  L3  Scene        SceneGraph + Entity Types          │  场景管理
+│                   vessel / guidewire / catheter ...  │
+├──────────────────────────────────────────────────────┤
+│  L2  Simulator    三频 Decimation  O(1) Reset        │  仿真调度
+├──────────────────────────────────────────────────────┤
+│  L1  Foundation   PhysicsState  BackendABC  Registry │  核心抽象
+└──────────────────────────────────────────────────────┘
+         ↕ 后端接口
+┌────────────────┐  ┌─────────────────┐  ┌──────────┐
+│  SOFA Backend  │  │ Blender Backend │  │  Mock    │
+└────────────────┘  └─────────────────┘  └──────────┘
+```
+
+## L1 — Foundation
+
+**核心数据结构与抽象接口。**
+
+| 类 | 职责 |
+|---|---|
+| `PhysicsState` | 物理量的主状态（位置/速度/接触力），可序列化快照 |
+| `DerivedState` | 由 PhysicsState 计算的派生量（曲率/应变/距离场） |
+| `ObsState`     | 对 RL 策略暴露的观测向量 |
+| `BackendABC`   | 物理引擎抽象接口（SOFA/Blender/Mock 实现此接口） |
+| `Registry`     | 组件注册表，支持 `@register("name")` 装饰器 |
+| `@configclass` | 基于 dataclass 的配置系统，支持 YAML 序列化 |
+
+## L2 — Simulator
+
+**三频解耦调度器。**
+
+```
+每个 wall-clock step:
+  × 20  物理子步   @ 1000 Hz  (SOFA FEM 求解)
+  ×  1  控制步     @   50 Hz  (策略 action 生效)
+  ÷  6.67 渲染帧  @  7.5 Hz  (按需，训练时可关闭)
+```
+
+O(1) Reset 机制：
+- `env.reset()` 恢复 `PhysicsState` 快照，**不重建 SOFA 场景**
+- 首次 reset 建场景（耗时约 2s），后续 reset 约 5ms
+
+## L3 — Scene
+
+**场景图与介入器械实体。**
+
+```python
+# Entity 类型
+vessel    # 血管网格（从 AVT STL 导入）
+guidewire # 导丝（BeamFEM 弹性模型）
+catheter  # 导管（刚性 + 弹性混合）
+stent     # 支架（网格展开模型）
+coil      # 弹簧圈（螺旋 FEM）
+```
+
+<Aside type="caution" title="L3 正在开发中">
+  SceneBuilder 和 cas_v1 场景在 Week 3 完成。当前可使用 Mock 场景测试 L4/L2。
+</Aside>
+
+## L4 — Env
+
+**Gymnasium 标准接口。**
+
+4 个 Manager 分离关注点：
+
+- **ActionManager** — 动作空间定义，原始 action → 物理控制量
+- **ObsManager** — 从 PhysicsState/DerivedState 组装观测向量
+- **RewardManager** — 可组合 reward 项（目标距离 / 接触力 / 路径偏离）
+- **TerminationManager** — 成功/失败/超时条件
+
+## L6 — Models
+
+**VLA / RL 模型接入层（预留）。**
+
+```python
+class ModelBridge(ABC):
+    @abstractmethod
+    def predict(self, obs: ObsState) -> np.ndarray: ...
+
+    @abstractmethod
+    def reset(self) -> None: ...
+```
+
+已规划适配器：
+- `TTTVLABridge` — 接入 TTT-VLA 策略
+- `DiffusionPolicyBridge` — 接入 Diffusion Policy
+- `SB3Bridge` — 接入 Stable-Baselines3 RL 算法
+
+## 后端接口
+
+```python
+class BackendABC(ABC):
+    @abstractmethod
+    def initialize(self, config: SimConfig) -> None: ...
+
+    @abstractmethod
+    def step(self, dt: float) -> PhysicsState: ...
+
+    @abstractmethod
+    def apply_action(self, action: np.ndarray) -> None: ...
+
+    @abstractmethod
+    def get_state(self) -> PhysicsState: ...
+
+    @abstractmethod
+    def set_state(self, state: PhysicsState) -> None: ...
+```
+
+所有后端必须通过 `tests/contract/` 下的契约测试。

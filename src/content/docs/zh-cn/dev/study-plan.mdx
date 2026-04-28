@@ -1,0 +1,56 @@
+---
+title: 6 周学习计划
+description: SynthVasc 从脚手架到 VLA 集成的完整开发路线。
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+<Aside type="tip" title="当前位置：S0 完成，Week 1 进行中">
+  39 tests passing，工具链就绪，正在推进 SOFA 环境配置。
+</Aside>
+
+<Steps>
+
+1. **Week 1 — 力学基础 + SOFA 环境**
+
+   - 学习 FEM 基础：梁单元、接触力学
+   - 在 gpu-server 编译 SOFA v23.06 + SofaPython3
+   - 跑通悬臂梁验证（FEM 误差 < 1%）
+   - 目标：`conda run -n sofa python -c "import Sofa"` 成功
+
+2. **Week 2 — SofaBackend 实现**
+
+   - 实现 `SofaBackend(BackendABC)`
+   - 通过全部 `tests/contract/` 契约测试
+   - 实现导丝 BeamFEM 模型
+   - 目标：`pytest tests/contract/ -v` 全绿
+
+3. **Week 3 — 真实血管场景**
+
+   - 将 AVT STL 网格导入 SOFA 场景
+   - 实现 `SceneBuilder` + `cas_v1` 场景
+   - 导丝从股动脉入口推进到 LCCA
+   - 目标：第一个真实 episode 跑通
+
+4. **Week 4 — RL 训练基线**
+
+   - 设计 Obs/Reward/Termination
+   - PPO 基线训练（Stable-Baselines3）
+   - 初步 Success Rate > 20%
+   - 目标：TensorBoard 训练曲线收敛
+
+5. **Week 5 — VLA 接入**
+
+   - 实现 `ModelBridge` + `TTTVLABridge`
+   - 接入 TTT-VLA 策略进行评测
+   - 对比 RL 基线 vs VLA zero-shot
+   - 目标：VLA SR vs RL SR 对比报告
+
+6. **Week 6 — 合成数据生成**
+
+   - 实现数据采集管线（专家轨迹 + 随机探索）
+   - 多病例批量仿真（27 个 AVT 场景）
+   - 生成 VLA 微调数据集
+   - 目标：10k+ 高质量 episode 数据集
+
+</Steps>

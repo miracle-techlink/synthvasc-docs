@@ -1,0 +1,65 @@
+---
+title: SOFA Backend
+description: SOFA 物理引擎后端安装、编译与验证。
+sidebar:
+  badge:
+    text: WIP
+    variant: caution
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+SOFA (Simulation Open Framework Architecture) 是 SynthVasc 的主要物理后端，
+提供有限元软体仿真能力，用于导丝/导管的弯曲变形和血管壁接触力计算。
+
+<Aside type="caution" title="需要 gpu-server 环境">
+  SOFA 编译在 **gpu-server (172.30.1.53)** 上进行，需先通过 UniVPN 连接内网。
+  本机 `conda env: sofa` 环境已预配置 SofaPython3 路径，但需要服务器端的共享库。
+</Aside>
+
+## 环境变量
+
+```bash
+export SOFA_ROOT=/home/liuyue/Research/血管介入手术机器人/deps/sofa/SOFA_v23.06.00_Linux
+export PYTHONPATH=$SOFA_ROOT/plugins/SofaPython3/lib/python3/site-packages
+export LD_LIBRARY_PATH=$SOFA_ROOT/lib:$SOFA_ROOT/plugins/SofaPython3/lib:/home/liuyue/miniforge3/envs/sofa/lib
+export CUDA_VISIBLE_DEVICES=""
+```
+
+## 验证安装
+
+```bash
+conda run -n sofa python3 -c "import Sofa; print('SOFA OK')"
+```
+
+## 悬臂梁验证（Week 1 目标）
+
+SOFA 后端的第一个物理验证场景：BeamFEM 悬臂梁受重力弯曲，对比解析解。
+
+```python
+# Week 1 验证脚本（开发中）
+from synthvasc.backends.sofa import SofaBackend
+from synthvasc.tests.fixtures import cantilever_config
+
+backend = SofaBackend()
+backend.initialize(cantilever_config)
+
+for _ in range(100):
+    state = backend.step(dt=0.001)
+
+tip_deflection = state.positions[-1, 2]
+analytical = cantilever_analytical_deflection(cantilever_config)
+assert abs(tip_deflection - analytical) / analytical < 0.01, "FEM 误差 > 1%"
+print(f"Tip deflection: {tip_deflection:.4f} m (analytical: {analytical:.4f} m)")
+```
+
+## 开发进度
+
+| 功能 | 状态 |
+|------|------|
+| 环境变量配置 | ✅ 完成 |
+| SofaPython3 导入验证 | ⬜ Week 1 |
+| 悬臂梁 FEM 验证 | ⬜ Week 1 |
+| BackendABC contract tests | ⬜ Week 2 |
+| 导丝 BeamFEM 模型 | ⬜ Week 2 |
+| 血管壁接触力 | ⬜ Week 3 |

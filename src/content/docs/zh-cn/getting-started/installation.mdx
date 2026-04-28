@@ -1,0 +1,55 @@
+---
+title: 安装部署
+description: SynthVasc Python 包安装与 SOFA 环境配置。
+sidebar:
+  order: 3
+---
+
+import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+
+## Python 包安装
+
+<Tabs>
+  <TabItem label="开发模式（推荐）">
+    ```bash
+    git clone https://github.com/miracle-techlink/vascular-intervention-platform
+    cd vascular-intervention-platform/synthvasc
+    pip install -e ".[dev]"
+    ```
+  </TabItem>
+  <TabItem label="仅运行时">
+    ```bash
+    pip install synthvasc
+    ```
+  </TabItem>
+</Tabs>
+
+## SOFA 环境（可选）
+
+<Aside type="caution">
+  仅当需要真实物理仿真时才需要 SOFA。Mock 后端无需此步骤。
+</Aside>
+
+```bash
+# 1. 创建 conda 环境
+conda create -n sofa python=3.11
+conda activate sofa
+
+# 2. 设置 SOFA 路径（已在 gpu-server 上预装）
+export SOFA_ROOT=/path/to/SOFA_v23.06.00_Linux
+export PYTHONPATH=$SOFA_ROOT/plugins/SofaPython3/lib/python3/site-packages
+export LD_LIBRARY_PATH=$SOFA_ROOT/lib:$SOFA_ROOT/plugins/SofaPython3/lib
+
+# 3. 验证
+python -c "import Sofa; print('SOFA', Sofa.__version__)"
+```
+
+## 验证安装
+
+```bash
+# 全部测试（Mock 后端，无需 SOFA）
+pytest tests/ -v
+
+# 预期输出
+# 39 passed in X.Xs
+```

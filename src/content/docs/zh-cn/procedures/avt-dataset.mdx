@@ -1,0 +1,31 @@
+---
+title: AVT 数据集
+description: Aortic Vessel Tree 数据集集成，27 个有效血管病例。
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+AVT (Aortic Vessel Tree) 数据集包含主动脉及其分支的 CT 扫描与手工分割标注，
+SynthVasc 使用其中 **27 个有效病例**作为仿真场景的血管网格来源。
+
+<Aside type="tip" title="预处理完成">
+  全部 27 个病例已完成：CT 分割 → 表面网格 → 中心线提取 → 导航点生成。
+</Aside>
+
+## 预处理流程
+
+```
+CT DICOM → TotalSegmentator 分割 → 血管 STL → MeshFix 修复
+    → vmtk 中心线提取 → 导航路径点 NPY → SynthVasc Scene 导入
+```
+
+## 数据统计
+
+| 指标 | 值 |
+|------|-----|
+| 总病例数 | 33 |
+| 有效病例 | 27 |
+| 训练集 | 22 |
+| 验证集 | 5 |
+| 平均网格面片数 | ~85k triangles |
+| 覆盖血管 | 主动脉 · LCCA · RCCA · 锁骨下动脉 · 髂动脉 |
